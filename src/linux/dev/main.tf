@@ -4,8 +4,15 @@ variable "ARM_CLIENT_SECRET" {}
 variable "ARM_TENANT_ID" {}
 variable "VM_ADMIN_PASSWORD" {}
 
+terraform {
+  required_providers {
+    azurerm = {
+      version = "=3.42.0"
+    }
+  }
+}
+
 provider "azurerm" {
-  version                       = "=2.6.0"
   subscription_id               = var.ARM_SUBSCRIPTION_ID
   client_id                     = var.ARM_CLIENT_ID
   client_secret                 = var.ARM_CLIENT_SECRET
@@ -14,12 +21,12 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "common" {
-  name     = "workplace-01"
+  name     = "workplace-00"
   location = "westeurope"
 }
 
 resource "azurerm_virtual_network" "main" {
-  name                = "workplace-01-vm-dev-vnet"
+  name                = "workplace-00-vm-dev-vnet"
   address_space       = ["10.0.0.0/16"]
   location            = "westeurope"
   resource_group_name = azurerm_resource_group.common.name
@@ -29,20 +36,20 @@ resource "azurerm_subnet" "main" {
   name                 = "mainSubnet"
   resource_group_name  = azurerm_resource_group.common.name
   virtual_network_name = azurerm_virtual_network.main.name
-  address_prefix       = "10.0.0.0/24"
+  address_prefixes     = ["10.0.0.0/24"]
 }
 
 resource "azurerm_public_ip" "main" {
-  name                = "workplace-01-vm-dev-pip"
+  name                = "workplace-00-vm-dev-pip"
   location            = "westeurope"
   resource_group_name = azurerm_resource_group.common.name
   allocation_method   = "Dynamic"
-  domain_name_label   = "ipworkplace-01-vm-dev"
+  domain_name_label   = "ipworkplace-13-vm-dev"
 }
 
 # Create Network Security Group and rule
 resource "azurerm_network_security_group" "main" {
-  name                = "workplace-01-vm-dev-nsg"
+  name                = "workplace-00-vm-dev-nsg"
   location            = "westeurope"
   resource_group_name = azurerm_resource_group.common.name
 
@@ -73,14 +80,14 @@ resource "azurerm_network_security_group" "main" {
 
 # Create network interface
 resource "azurerm_network_interface" "main" {
-  name                      = "workplace-01-vm-dev-nic01"
+  name                      = "workplace-00-vm-dev-nic01"
   location                  = "westeurope"
   resource_group_name       = azurerm_resource_group.common.name
 
   ip_configuration {
     name                          = "mainNicConfiguration"
     subnet_id                     = azurerm_subnet.main.id
-    private_ip_address_allocation = "dynamic"
+    private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.main.id
   }
 }
@@ -96,12 +103,12 @@ resource "azurerm_virtual_machine" "main" {
   location                      = "westeurope"
   resource_group_name           = azurerm_resource_group.common.name
   network_interface_ids         = [azurerm_network_interface.main.id]
-  vm_size                       = "Standard_D2s_v3"
+  vm_size                       = "standard_d2s_v5"
   delete_os_disk_on_termination = true
   #license_type                  = "Windows_Server"
 
   storage_os_disk {
-    name              = "workplace-01-vm-dev-disk-os"
+    name              = "workplace-00-vm-dev-disk-os"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Premium_LRS"
@@ -109,9 +116,9 @@ resource "azurerm_virtual_machine" "main" {
 
   storage_image_reference {
     publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-focal"
-    sku       = "20_04-lts-gen2"
-    version   = "20.04.202007290"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
+    version   = "22.04.202304280"
   }
  
   os_profile {
@@ -126,7 +133,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "remote-exec" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
@@ -139,7 +146,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "file" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
@@ -151,7 +158,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "remote-exec" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
@@ -165,7 +172,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "file" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
@@ -177,7 +184,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "remote-exec" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
@@ -191,7 +198,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "file" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
@@ -203,7 +210,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "remote-exec" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
@@ -217,7 +224,7 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "remote-exec" {
     connection {
-      host     = "ipworkplace-01-vm-dev.westeurope.cloudapp.azure.com"
+      host     = "ipworkplace-13-vm-dev.westeurope.cloudapp.azure.com"
       type     = "ssh"
       user     = "aleks"
       password = var.VM_ADMIN_PASSWORD
